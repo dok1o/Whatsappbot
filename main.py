@@ -9,8 +9,13 @@ from telegram.ext import (
 )
 from chatgpt.chatgpt import ask_chatgpt
 from scenarios.scenarios import SCENARIOS
+from flask import Flask, request
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
+PORT = int(os.environ.get("PORT", 5000))  # Render назначает порт через переменную окружения
+
+# Flask сервер
+flask_app = Flask(__name__)
 
 # /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -35,21 +40,39 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Любое сообщение
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text.strip()
-
     if user_text in SCENARIOS:
         reply = SCENARIOS[user_text] + "\n\n✍️ Енді өзің жауап беріп көр!"
     else:
         reply = ask_chatgpt(user_text, "Біз қазақ тілін үйреніп жатырмыз.")
-
     await update.message.reply_text(reply)
 
-# Создаём приложение
+# Создаём приложение Telegram
 app = ApplicationBuilder().token(BOT_TOKEN).build()
-
-# Добавляем хендлеры
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
 
-# Запуск бота
+# Flask endpoint для Telegram webhook
+@flask_app.route(f"/{BOT_TOKEN}", methods=["POST"])
+def webhook():
+    """Пришедший update от Telegram обрабатывается здесь"""
+    from telegram import Update
+    import asyncio
+
+    update = Update.de_json(request.get_json(force=True), app.bot)
+    asyncio.run(app.update_queue.put(update))
+    return "ok"
+
+# Настройка webhook на старт
+def set_webhook():
+    url = os.environ.get("WEBHOOK_URL")  # сюда ставим публичный URL Render + токен
+    if url:
+        webhook_url = f"{url}/{BOT_TOKEN}"
+        app.bot.set_webhook(webhook_url)
+        print(f"Webhook установлен: {webhook_url}")
+    else:
+        print("WEBHOOK_URL не задан!")
+
+# Запуск Flask сервера
 if __name__ == "__main__":
-    app.run_polling()
+    set_webhook()
+    flask_app.run(host="0.0.0.0", port=PORT)
