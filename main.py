@@ -52,14 +52,11 @@ app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
 
 # Flask endpoint для Telegram webhook
-@flask_app.route(f"/{BOT_TOKEN}", methods=["POST"])
+@flask_app.route(f"/webhook/{BOT_TOKEN}", methods=["POST"])
 def webhook():
-    """Пришедший update от Telegram обрабатывается здесь"""
     from telegram import Update
-    import asyncio
-
     update = Update.de_json(request.get_json(force=True), app.bot)
-    asyncio.run(app.update_queue.put(update))
+    app.update_queue.put_nowait(update)
     return "ok"
 
 # Настройка webhook на старт
