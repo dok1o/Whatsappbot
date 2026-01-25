@@ -1,3 +1,4 @@
+import asyncio
 import os
 from telegram import Update
 from telegram.ext import (
@@ -42,8 +43,8 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_text in SCENARIOS:
         reply = SCENARIOS[user_text] + "\n\n✍️ Енді өзің жауап беріп көр!"
     else:
-        reply = ask_chatgpt(user_text, "Біз қазақ тілін үйреніп жатырмыз.")
-    await update.message.reply_text(reply)
+        reply = await asyncio.to_thread(ask_chatgpt, user_text, "Біз қазақ тілін үйреніп жатырмыз.")
+await update.message.reply_text(reply)
 
 # Создаём приложение Telegram
 app = ApplicationBuilder().token(BOT_TOKEN).build()
