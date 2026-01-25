@@ -9,51 +9,39 @@ from telegram.ext import (
 )
 from chatgpt.chatgpt import ask_chatgpt
 from scenarios.scenarios import SCENARIOS
-from flask import Flask, request
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
-PORT = int(os.environ.get("PORT", 5000))  # Render назначает порт через переменную окружения
-
-# Flask сервер
-flask_app = Flask(__name__)
+PORT = int(os.environ.get("PORT", 5000))
+WEBHOOK_URL = os.environ.get("WEBHOOK_URL")  # https://whatsapp-ai-bot-uk0w.onrender.com
 
 # /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("DEBUG: start вызван")
-    await update.message.reply_text(
-        "👋 Сәлем! Бот работает."
-    )
-
-
+    await update.message.reply_text("👋 Сәлем! Бот работает.")
+    
 # Любое сообщение
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    print("CHAT вызван, сообщение:", update.message.text)  # <-- debug
-    await update.message.reply_text("Я получил сообщение!")
-
+    user_text = update.message.text.strip()
+    if user_text in SCENARIOS:
+        reply = SCENARIOS[user_text] + "\n\n✍️ Енді өзің жауап беріп көр!"
+    else:
+        reply = ask_chatgpt(user_text, "Біз қазақ тілін үйреніп жатырмыз.")
+    await update.message.reply_text(reply)
 
 # Создаём приложение Telegram
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
 
-# Flask endpoint для Telegram webhook
-@flask_app.route(f"/webhook/{BOT_TOKEN}", methods=["POST"])
-def webhook():
-    from telegram import Update
-    update = Update.de_json(request.get_json(force=True), app.bot)
-    app.update_queue.put_nowait(update)
-    return "ok"
+# Устанавливаем webhook
+webhook_url = f"{WEBHOOK_URL}/{BOT_TOKEN}"
+app.bot.set_webhook(webhook_url)
+print(f"Webhook установлен: {webhook_url}")
 
-# Настройка webhook на старт
-def set_webhook():
-    url = os.environ.get("WEBHOOK_URL")
-    if url:
-        webhook_url = f"{url}/webhook/{BOT_TOKEN}"  # теперь точно совпадает
-        app.bot.set_webhook(webhook_url)
-        print(f"Webhook установлен: {webhook_url}")
+# Запуск webhook сервера на Render
+app.run_webhook(
+    listen="0.0.0.0",
+    port=PORT,
+    url_path=BOT_TOKEN,
+    webhook_url=webhook_url
+)
 
-# Запуск Flask сервера
-if __name__ == "__main__":
-    set_webhook()
-    PORT = int(os.environ.get("PORT", 5000))
-    flask_app.run(host="0.0.0.0", port=PORT)
