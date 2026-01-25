@@ -61,13 +61,11 @@ def webhook():
 
 # Настройка webhook на старт
 def set_webhook():
-    url = os.environ.get("WEBHOOK_URL")  # сюда ставим публичный URL Render + токен
+    url = os.environ.get("WEBHOOK_URL")
     if url:
-        webhook_url = f"{url}/{BOT_TOKEN}"
+        webhook_url = f"{url}/webhook/{BOT_TOKEN}"  # теперь точно совпадает
         app.bot.set_webhook(webhook_url)
         print(f"Webhook установлен: {webhook_url}")
-    else:
-        print("WEBHOOK_URL не задан!")
 
 # Запуск Flask сервера
 if __name__ == "__main__":
