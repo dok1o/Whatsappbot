@@ -1,49 +1,55 @@
-from flask import Flask, request
-import requests
 import os
-from scenarios.scenarios import SCENARIOS
+import asyncio
+from telegram import Update
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    MessageHandler,
+    ContextTypes,
+    filters,
+)
 from chatgpt.chatgpt import ask_chatgpt
+from scenarios.scenarios import SCENARIOS
 
-app = Flask(__name__)
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
-WHATSAPP_TOKEN = os.environ.get("WHATSAPP_TOKEN")
-PHONE_ID = os.environ.get("PHONE_ID")
+# /start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = (
+        "👋 Сәлеметсің бе!\n\n"
+        "Мен — қазақ тілін үйрететін ИИ ботпын 🇰🇿\n\n"
+        "📌 Төмендегі жағдайлардың бірін таңда:\n"
+        "1️⃣ Дүкенде\n"
+        "2️⃣ Мектепте\n"
+        "3️⃣ Қонақта\n"
+        "4️⃣ Қоғамдық көлікте\n"
+        "5️⃣ Достармен кездесу\n"
+        "6️⃣ Дәрігерде\n"
+        "7️⃣ Ауа райы\n"
+        "8️⃣ Саяхат\n"
+        "9️⃣ Ұлттық дәстүрлер\n"
+        "🔟 Болашақ жоспарлар\n\n"
+        "👉 Тек санын жібер (1–10)"
+    )
+    await update.message.reply_text(text)
 
-WELCOME_TEXT = "👋 *Сәлеметсің бе!* ..."
+# Любое сообщение
+async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_text = update.message.text.strip()
 
-@app.route("/webhook", methods=["POST"])
-def webhook():
-    data = request.json
-    try:
-        messages = data.get("entry", [])[0].get("changes", [])[0].get("value", {}).get("messages", [])
-        if not messages: return "ok", 200
+    if user_text in SCENARIOS:
+        reply = SCENARIOS[user_text] + "\n\n✍️ Енді өзің жауап беріп көр!"
+    else:
+        reply = ask_chatgpt(user_text, "Біз қазақ тілін үйреніп жатырмыз.")
 
-        msg = messages[0]
-        text = msg.get("text", {}).get("body", "").strip()
-        sender = msg.get("from")
-        if not text or not sender: return "ok", 200
+    await update.message.reply_text(reply)
 
-        if text in SCENARIOS:
-            reply = SCENARIOS[text] + "\n\n✍️ Енді өзің жауап беріп көр!"
-        elif text.lower() in ["сәлем", "салам", "hi", "hello"]:
-            reply = WELCOME_TEXT
-        else:
-            reply = ask_chatgpt(text, "Біз қазақ тілін үйреніп жатырмыз.")
-
-        url = f"https://graph.facebook.com/v18.0/{PHONE_ID}/messages"
-        headers = {
-            "Authorization": f"Bearer {WHATSAPP_TOKEN}",
-            "Content-Type": "application/json"
-        }
-        payload = {"messaging_product": "whatsapp", "to": sender, "text": {"body": reply}}
-        requests.post(url, json=payload, headers=headers)
-    except Exception as e:
-        print("ERROR:", e)
-    return "ok", 200
-
-@app.route("/")
-def home():
-    return "Қазақша WhatsApp-бот жұмыс істеп тұр 🚀"
+# Запуск
+async def main():
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
+    await app.run_polling()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    asyncio.run(main())
