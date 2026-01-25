@@ -19,23 +19,12 @@ flask_app = Flask(__name__)
 
 # /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = (
-        "👋 Сәлеметсің бе!\n\n"
-        "Мен — қазақ тілін үйрететін ИИ ботпын 🇰🇿\n\n"
-        "📌 Төмендегі жағдайлардың бірін таңда:\n"
-        "1️⃣ Дүкенде\n"
-        "2️⃣ Мектепте\n"
-        "3️⃣ Қонақта\n"
-        "4️⃣ Қоғамдық көлікте\n"
-        "5️⃣ Достармен кездесу\n"
-        "6️⃣ Дәрігерде\n"
-        "7️⃣ Ауа райы\n"
-        "8️⃣ Саяхат\n"
-        "9️⃣ Ұлттық дәстүрлер\n"
-        "🔟 Болашақ жоспарлар\n\n"
-        "👉 Тек санын жібер (1–10)"
+    print("START вызван")  # <-- это и есть debug-вывод
+    await update.message.reply_text(
+        "👋 Сәлем! Бот работает.\n\n"
+        "Тут будет меню позже, пока проверяем webhook."
     )
-    await update.message.reply_text(text)
+
 
 # Любое сообщение
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
