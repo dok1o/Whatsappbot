@@ -15,8 +15,26 @@ PORT = int(os.environ.get("PORT", 5000))
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")  # https://whatsapp-ai-bot-uk0w.onrender.com
 
 # /start
+# /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("👋 Сәлем! Бот работает.")
+    text = (
+        "👋 Сәлеметсің бе!\n\n"
+        "Мен — қазақ тілін үйрететін ИИ ботпын 🇰🇿\n\n"
+        "📌 Төмендегі жағдайлардың бірін таңда:\n"
+        "1️⃣ Дүкенде\n"
+        "2️⃣ Мектепте\n"
+        "3️⃣ Қонақта\n"
+        "4️⃣ Қоғамдық көлікте\n"
+        "5️⃣ Достармен кездесу\n"
+        "6️⃣ Дәрігерде\n"
+        "7️⃣ Ауа райы\n"
+        "8️⃣ Саяхат\n"
+        "9️⃣ Ұлттық дәстүрлер\n"
+        "🔟 Болашақ жоспарлар\n\n"
+        "👉 Тек санын жібер (1–10)"
+    )
+    await update.message.reply_text(text)
+
     
 # Любое сообщение
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
