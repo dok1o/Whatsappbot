@@ -28,12 +28,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Любое сообщение
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_text = update.message.text.strip()
-    if user_text in SCENARIOS:
-        reply = SCENARIOS[user_text] + "\n\n✍️ Енді өзің жауап беріп көр!"
-    else:
-        reply = ask_chatgpt(user_text, "Біз қазақ тілін үйреніп жатырмыз.")
-    await update.message.reply_text(reply)
+    print("CHAT вызван, сообщение:", update.message.text)  # <-- debug
+    await update.message.reply_text("Я получил сообщение!")
+
 
 # Создаём приложение Telegram
 app = ApplicationBuilder().token(BOT_TOKEN).build()
