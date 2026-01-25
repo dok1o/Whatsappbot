@@ -75,4 +75,5 @@ def set_webhook():
 # Запуск Flask сервера
 if __name__ == "__main__":
     set_webhook()
+    PORT = int(os.environ.get("PORT", 5000))
     flask_app.run(host="0.0.0.0", port=PORT)
