@@ -19,10 +19,9 @@ flask_app = Flask(__name__)
 
 # /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    print("START вызван")  # <-- это и есть debug-вывод
+    await update.message.reply_text("DEBUG: start вызван")
     await update.message.reply_text(
-        "👋 Сәлем! Бот работает.\n\n"
-        "Тут будет меню позже, пока проверяем webhook."
+        "👋 Сәлем! Бот работает."
     )
 
 
